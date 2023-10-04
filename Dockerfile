@@ -17,13 +17,13 @@ ENV DEBIAN_FRONTEND=noninteractive
 ADD extras/docker-clean /usr/bin/docker-clean
 RUN chmod a+rx /usr/bin/docker-clean && docker-clean
 
-########################################
+########################################g
 # Necessary packages
 ########################################
 
 RUN apt-get update --yes \
-	&& apt-get install -yq --no-install-recommends curl wget build-essential \
-	&& docker-clean
+    && apt-get install -yq --no-install-recommends curl wget build-essential \
+    && docker-clean
 
 ########################################
 # Install mpi
@@ -32,12 +32,12 @@ RUN apt-get update --yes \
 # necessities and IB stack
 RUN apt-get update && apt-get install -yq gnupg2 ca-certificates
 RUN curl -k -L http://www.mellanox.com/downloads/ofed/RPM-GPG-KEY-Mellanox | apt-key add -
-RUN curl -k -L https://linux.mellanox.com/public/repo/mlnx_ofed/latest/ubuntu18.04/mellanox_mlnx_ofed.list > /etc/apt/sources.list.d/mlnx_ofed.list
-RUN apt-get update && \
-    apt-get install -yq --no-install-recommends gfortran bison libibverbs-dev libnuma-dev \
-	libibmad-dev libibumad-dev librdmacm-dev libxml2-dev ca-certificates libfabric-dev \
-        mlnx-ofed-basic ucx \
-	&& docker-clean
+RUN curl -k -L https://linux.mellanox.com/public/repo/mlnx_ofed/5.0-2.1.8.0/ubuntu18.04/mellanox_mlnx_ofed.list > /etc/apt/sources.list.d/mlnx_ofed.list
+RUN apt-get update \
+    && apt-get install -yq --no-install-recommends gfortran bison libibverbs-dev libnuma-dev \
+    libibmad-dev libibumad-dev librdmacm-dev libxml2-dev ca-certificates libfabric-dev \
+    mlnx-ofed-basic ucx \
+    && docker-clean
 
 # Install PSM2
 ARG PSM=PSM2
@@ -61,8 +61,8 @@ RUN echo deb https://apt.repos.intel.com/mpi all main > /etc/apt/sources.list.d/
 RUN apt-get update \
     && apt-get install -y intel-mpi-20${MAJV}${BV}-102 \
     && rm -r /opt/intel/compilers_and_libraries/linux/mpi/intel64/lib/debug/libmpi.a \
-             /opt/intel/compilers_and_libraries/linux/mpi/intel64/lib/debug_mt/libmpi.a \
-             /opt/intel/compilers_and_libraries/linux/mpi/intel64/lib/release_mt/libmpi.a \
+    /opt/intel/compilers_and_libraries/linux/mpi/intel64/lib/debug_mt/libmpi.a \
+    /opt/intel/compilers_and_libraries/linux/mpi/intel64/lib/release_mt/libmpi.a \
     && docker-clean
 
 # Configure environment for impi
@@ -114,7 +114,7 @@ RUN apt-get update --yes && \
     docker-clean && \
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
-    
+
 # Configure environment
 ENV CONDA_DIR=/opt/conda \
     SHELL=/bin/bash \
@@ -133,31 +133,31 @@ WORKDIR /tmp
 RUN set -x && \
     arch=$(uname -m) && \
     if [ "${arch}" = "x86_64" ]; then \
-        # Should be simpler, see <https://github.com/mamba-org/mamba/issues/1437>
-        arch="64"; \
+    # Should be simpler, see <https://github.com/mamba-org/mamba/issues/1437>
+    arch="64"; \
     fi && \
     wget -qO /tmp/micromamba.tar.bz2 \
-        "https://micromamba.snakepit.net/api/micromamba/linux-${arch}/latest" && \
+    "https://micromamba.snakepit.net/api/micromamba/linux-${arch}/latest" && \
     tar -xvjf /tmp/micromamba.tar.bz2 --strip-components=1 bin/micromamba && \
     rm /tmp/micromamba.tar.bz2 && \
     PYTHON_SPECIFIER="python=${PYTHON_VERSION}" && \
     if [[ "${PYTHON_VERSION}" == "default" ]]; then PYTHON_SPECIFIER="python"; fi && \
     if [ "${arch}" == "aarch64" ]; then \
-        # Prevent libmamba from sporadically hanging on arm64 under QEMU
-        # <https://github.com/mamba-org/mamba/issues/1611>
-        # We don't use `micromamba config set` since it instead modifies ~/.condarc.
-        echo "extract_threads: 1" >> "${CONDA_DIR}/.condarc"; \
+    # Prevent libmamba from sporadically hanging on arm64 under QEMU
+    # <https://github.com/mamba-org/mamba/issues/1611>
+    # We don't use `micromamba config set` since it instead modifies ~/.condarc.
+    echo "extract_threads: 1" >> "${CONDA_DIR}/.condarc"; \
     fi && \
     # Install the packages
     ./micromamba install \
-        --root-prefix="${CONDA_DIR}" \
-        --prefix="${CONDA_DIR}" \
-        --yes \
-        "${PYTHON_SPECIFIER}" \
-        'mamba' \
-        'notebook' \
-        'jupyterhub' \
-        'jupyterlab' && \
+    --root-prefix="${CONDA_DIR}" \
+    --prefix="${CONDA_DIR}" \
+    --yes \
+    "${PYTHON_SPECIFIER}" \
+    'mamba' \
+    'notebook' \
+    'jupyterhub' \
+    'jupyterlab' && \
     rm micromamba && \
     # Pin major.minor version of python
     mamba list python | grep '^python ' | tr -s ' ' | cut -d ' ' -f 1,2 >> "${CONDA_DIR}/conda-meta/pinned" && \
